@@ -73,7 +73,7 @@ export const SignIn = () => {
         value={formik.values.email}
         width={INPUT_WIDTH}
       />
-      <Input
+      <Input.Password
         color="primary"
         rounded
         status={!!formik.errors.password ? 'error' : 'default'}
@@ -83,7 +83,6 @@ export const SignIn = () => {
         name="password"
         value={formik.values.password}
         width={INPUT_WIDTH}
-        type="password"
       />
       <Button type="submit">
         {formik.isSubmitting ? <Loading size="sm" /> : 'Sign In'}
