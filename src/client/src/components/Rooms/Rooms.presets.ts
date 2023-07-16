@@ -8,12 +8,12 @@ export const RoomsWrapper = styled('div', {
     height: 'fit-content',
   },
   '.scroll-wrapper': {
+    marginTop: '20px',
     maxHeight: '400px',
     height: 'fit-content',
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
-    padding: '20px',
     '.room': {
       width: '350px',
       button: {
@@ -23,5 +23,6 @@ export const RoomsWrapper = styled('div', {
   },
   '.rooms': {
     height: 'fit-content',
+    padding: '20px',
   },
 });

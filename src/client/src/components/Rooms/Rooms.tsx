@@ -4,16 +4,17 @@ import {
   ClientToServerEvents,
   ServerToClientEvents,
 } from '../../types/Socket';
-import { useCallback, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { FormWrapper } from '../../shared/FormWrapper';
 import { useFormik } from 'formik';
-import { Button, Card, Input } from '@nextui-org/react';
+import { Button, Card, FormElement, Input } from '@nextui-org/react';
 import { object, string } from 'yup';
 import { INPUT_WIDTH } from '../../utils/constants';
 import { useAppSelector } from '../../store/hooks/hooks';
 import { RoomsWrapper } from './Rooms.presets';
 import ScrollContainer from 'react-indiana-drag-scroll';
 import { useNavigate } from 'react-router-dom';
+import { useDebounce } from 'use-debounce';
 import type { IFormProps } from './Rooms.props';
 import type { IRoom } from '../../types/Room';
 
@@ -31,11 +32,19 @@ const validationSchema = object({
 export const Rooms = () => {
   const { user } = useAppSelector((state) => state.user);
   const [rooms, setRooms] = useState<IRoom[]>([]);
+  const [roomName, setRoomName] = useState('');
+  const [debouncedRoomName] = useDebounce(roomName, 700);
   const navigate = useNavigate();
 
   const handleNavigate = useCallback(
     (to: string) => () => {
       navigate(`/rooms/${to}`);
+    },
+    [],
+  );
+  const handleSearchChange = useCallback(
+    ({ target }: ChangeEvent<FormElement>) => {
+      setRoomName(target.value);
     },
     [],
   );
@@ -92,25 +101,35 @@ export const Rooms = () => {
         </Button>
       </FormWrapper>
       <Card className="rooms">
+        <Input
+          placeholder="Search by room name"
+          onChange={handleSearchChange}
+        />
         <ScrollContainer
           horizontal={false}
           vertical
           className="scroll-wrapper"
           hideScrollbars={false}
         >
-          {rooms.map((room) => (
-            <div className="room">
-              <Button
-                color="gradient"
-                type="button"
-                ghost
-                key={room._id}
-                onPress={handleNavigate(room._id)}
-              >
-                {room.name}
-              </Button>
-            </div>
-          ))}
+          {rooms
+            .filter(
+              debouncedRoomName
+                ? ({ name }) => name.includes(debouncedRoomName)
+                : Boolean,
+            )
+            .map((room) => (
+              <div className="room">
+                <Button
+                  color="gradient"
+                  type="button"
+                  ghost
+                  key={room._id}
+                  onPress={handleNavigate(room._id)}
+                >
+                  {room.name}
+                </Button>
+              </div>
+            ))}
         </ScrollContainer>
       </Card>
     </RoomsWrapper>
