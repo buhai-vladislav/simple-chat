@@ -1,63 +1,11 @@
 import { Button, Input, Loading, Text } from '@nextui-org/react';
-import { FormWrapper } from '../../shared/FormWrapper';
-import { useFormik } from 'formik';
-import { ISignInFormProps } from './SignIn.props';
-import { useCallback } from 'react';
-import { INPUT_WIDTH } from '../../utils/constants';
-import { useSigninMutation } from '../../store/api/main.api';
-import { useAppDispatch } from '../../store/hooks/hooks';
-import { IResponse } from '../../types/Response';
-import { IMutation } from '../../types/RTK';
-import { useNavigate } from 'react-router-dom';
-import { ISignInResponse } from '../../types/Auth';
-import { setUser } from '../../store/reducers/user';
-import { object, string } from 'yup';
-import { useErrorToast } from '../../hooks/useErrorToast';
-import { HttpStatus } from '../../types/HttpStatus';
 
-const validationSchema = object({
-  email: string()
-    .email("It's not a valid email.")
-    .required('Email is required.'),
-  password: string().required('Password is required.'),
-});
+import { FormWrapper } from '../../shared/FormWrapper';
+import { INPUT_WIDTH } from '../../utils/constants';
+import { useSignIn } from './hooks/useSignIn';
 
 export const SignIn = () => {
-  const [signin, { error }] = useSigninMutation();
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const onSubmit = useCallback(
-    async ({ email, password }: ISignInFormProps) => {
-      const response: IMutation<IResponse<ISignInResponse>> = await signin({
-        email,
-        password,
-      });
-
-      if (response?.data?.data?.user) {
-        dispatch(setUser(response.data.data?.user));
-
-        localStorage.setItem('accessToken', response.data.data?.accessToken);
-        navigate('/');
-      }
-    },
-    [],
-  );
-
-  const formik = useFormik<ISignInFormProps>({
-    initialValues: {
-      email: '',
-      password: '',
-    },
-    onSubmit,
-    validationSchema,
-    validateOnChange: false,
-  });
-
-  useErrorToast(
-    error,
-    [{ status: HttpStatus.BAD_REQUEST }, { status: HttpStatus.UNAUTHORIZED }],
-    { position: 'bottom-center', type: 'error' },
-  );
+  const [formik] = useSignIn();
 
   return (
     <FormWrapper onSubmit={formik.handleSubmit}>

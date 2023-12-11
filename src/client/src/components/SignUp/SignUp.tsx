@@ -1,71 +1,11 @@
 import { Button, Input, Text } from '@nextui-org/react';
-import { FormWrapper } from '../../shared/FormWrapper';
-import { useCallback } from 'react';
-import { IFormProps } from './SignUp.props';
-import { useFormik } from 'formik';
-import { object, ref, string } from 'yup';
-import { useSignupMutation } from '../../store/api/main.api';
-import { IMutation } from '../../types/RTK';
-import { IResponse } from '../../types/Response';
-import { IUser } from '../../types/User';
-import { useErrorToast } from '../../hooks/useErrorToast';
-import { HttpStatus } from '../../types/HttpStatus';
-import { ToastOptions } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
-import { INPUT_WIDTH } from '../../utils/constants';
 
-const validationSchema = object({
-  name: string().required('Fullname is required'),
-  email: string().email('Invalid email format.').required('Email is required'),
-  password: string()
-    .required('Password is required')
-    .min(6, 'Password must be at least 6 characters'),
-  confirmPassword: string()
-    .oneOf([ref('password')], 'Passwords do not match')
-    .required('Confirm password is required')
-    .min(6, 'Confirm password must be at least 6 characters'),
-});
+import { FormWrapper } from '../../shared/FormWrapper';
+import { INPUT_WIDTH } from '../../utils/constants';
+import { useSignUp } from './hooks/useSignUp';
 
 export const SignUp = () => {
-  const [signup, { error }] = useSignupMutation();
-  const navigate = useNavigate();
-
-  const onSubmit = useCallback(
-    async ({ email, name, password }: IFormProps) => {
-      const response: IMutation<IResponse<IUser>> = await signup({
-        email,
-        password,
-        name,
-      });
-
-      if (response.data) {
-        navigate('/signin');
-      }
-    },
-    [],
-  );
-
-  const formik = useFormik<IFormProps>({
-    initialValues: {
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-    onSubmit,
-    validationSchema,
-  });
-
-  const toastOptions: ToastOptions = {
-    position: 'bottom-center',
-    type: 'error',
-  };
-
-  useErrorToast(
-    error,
-    [{ status: HttpStatus.INTERNAL_SERVER_ERROR }],
-    toastOptions,
-  );
+  const [formik] = useSignUp();
 
   return (
     <>

@@ -1,106 +1,13 @@
-import { Badge, Card, Input, Tooltip } from '@nextui-org/react';
-import { RoomWrapper, SendButton } from './Room.presets';
-import { useFormik } from 'formik';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { object, string } from 'yup';
-import { Socket, io } from 'socket.io-client';
-import {
-  ServerToClientEvents,
-  ClientToServerEvents,
-  ClientEvents,
-  ServerEvents,
-} from '../../types/Socket';
-import { useParams } from 'react-router-dom';
-import { useAppSelector } from '../../store/hooks/hooks';
-import { IFormProps } from './Room.props';
-import { IMessage } from '../../types/Message';
-import { SendIcom } from '../../icons';
+import { Card, Input, Tooltip } from '@nextui-org/react';
 import ScrollContainer from 'react-indiana-drag-scroll';
+
+import { RoomWrapper, SendButton } from './Room.presets';
+import { SendIcom } from '../../icons';
 import { getFullDate } from '../../utils/utils';
-
-const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-  process.env.REACT_APP_SOCKET_HOST ?? '',
-  {
-    autoConnect: false,
-  },
-);
-
-const validationSchema = object({
-  message: string().required('Message is required.'),
-});
+import { useRoom } from './hooks/useRoom';
 
 export const Room = () => {
-  const { roomId } = useParams();
-  const scrollRef = useRef<HTMLElement>(null);
-  const { user } = useAppSelector((state) => state.user);
-  const [messages, setMessages] = useState<IMessage[]>([]);
-  const onSubmit = useCallback(
-    ({ message }: IFormProps) => {
-      if (roomId && user && socket) {
-        socket.emit(ClientEvents.message, {
-          roomId,
-          userId: user._id,
-          message,
-        });
-        formik.resetForm();
-      }
-    },
-    [roomId, user, socket],
-  );
-
-  const formik = useFormik<IFormProps>({
-    initialValues: {
-      message: '',
-    },
-    onSubmit,
-    validationSchema,
-  });
-
-  const scrollToBottom = () => {
-    const lastChildElement = scrollRef.current?.lastElementChild;
-    lastChildElement?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    if (roomId && user) {
-      socket.on('connect', () => {
-        socket
-          .emitWithAck(ClientEvents.join_room, {
-            roomId,
-            socketId: socket.id,
-            userId: user._id,
-          })
-          .then((messages: IMessage[]) => {
-            setMessages(messages);
-          });
-      });
-
-      socket.on(ServerEvents.message, (message: IMessage) => {
-        setMessages((messages) => {
-          if (
-            !messages.find(
-              (msg) => msg._id.toString() === message._id.toString(),
-            )
-          ) {
-            return [...messages, message];
-          }
-          return messages;
-        });
-      });
-
-      socket.connect();
-
-      return () => {
-        socket.disconnect();
-        socket.off('connect');
-        socket.off('disconnect');
-      };
-    }
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  const [messages, user, scrollRef, formik] = useRoom();
 
   return (
     <RoomWrapper>
